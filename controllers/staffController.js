@@ -102,3 +102,40 @@ export const deleteStaff = async (req, res) => {
 
   res.json({ message: "Staff deleted" });
 };
+
+
+export const getStaffById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, name, email, mobile, role, status, created_at")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getTicketsByStaff = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("id, ticket_number, issue, status, created_at")
+      .eq("assigned_staff_id", staffId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
