@@ -7,6 +7,8 @@ import {
   updateStaff,
   deleteStaff,
   toggleStatus,
+  getStaffById,
+  getTicketsByStaff,
 } from "../controllers/staffController.js";
 
 const router = express.Router();
@@ -17,5 +19,12 @@ router.post("/", authMiddleware, requireRole(["admin"]), createStaff);
 router.put("/:id", authMiddleware, requireRole(["admin"]), updateStaff);
 router.patch("/:id/status", authMiddleware, requireRole(["admin"]), toggleStatus);
 router.delete("/:id", authMiddleware, requireRole(["admin"]), deleteStaff);
+router.get("/:id", authMiddleware, getStaffById);
+router.get(
+  "/assigned/:staffId",
+  authMiddleware,
+  requireRole(["admin", "staff"]),
+  getTicketsByStaff
+);
 
 export default router;
