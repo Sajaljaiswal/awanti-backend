@@ -5,6 +5,7 @@ import cors from "cors";
 import productRoutes from "../routes/products.js";
 import staffRoutes from "../routes/staff.js";
 import ticketRoutes from "../routes/tickets.js";
+import requestRoutes from "../routes/request.js";
 import userRoutes from "../routes/user.js";
 import amcRoutes from "../routes/amc.js";
 
@@ -20,6 +21,7 @@ app.use("/amc", amcRoutes);
 app.use("/staff", staffRoutes);
 app.use("/products", productRoutes);
 app.use("/tickets", ticketRoutes);
+app.use("/requests", requestRoutes);
 
 app.get("/health", (req, res) => {
   res.send("Backend running ✅");
