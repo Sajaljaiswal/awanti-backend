@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 /* ADMIN ONLY */
-router.post("/", authMiddleware, requireRole(["admin"]), createAMC);
+router.post("/" ,authMiddleware,requireRole(['admin']),createAMC);
 router.get("/", authMiddleware, requireRole(["admin"]), getAllAMCs);
 router.put("/:id", authMiddleware, requireRole(["admin"]), updateAMC);
 router.delete("/:id", authMiddleware, requireRole(["admin"]), deleteAMC);

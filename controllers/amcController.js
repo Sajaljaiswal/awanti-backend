@@ -1,43 +1,53 @@
 import { supabase } from "../src/supabase.js";
-
-/* CREATE AMC */
 export const createAMC = async (req, res) => {
   try {
     const {
-      customer_id,
-      customer_type,
-      amc_type,
-      duration_months,
-      fees,
-      products_covered,
+      user_id,
+      company_name,
+      site_address,
+      num_laptops,
+      num_computers,
+      num_printers,
+      num_scanners,
+      computer_configs,
+      on_network,
+      os_type,
+      payment_cycle,
+      rate_per_pc,
+      payment_method,
+      status,
+      amc_type, // optional (agar add kiya hai)
     } = req.body;
 
-    if (!customer_id || !fees) {
-      return res.status(400).json({ message: "Customer & fees required" });
+    // Required fields
+    if (!user_id || !rate_per_pc) {
+      return res
+        .status(400)
+        .json({ message: "user_id & rate_per_pc required" });
     }
-
-    const start = new Date();
-    const end = new Date();
-    end.setMonth(end.getMonth() + (duration_months || 12));
 
     const { data, error } = await supabase
       .from("amcs")
       .insert([
         {
-          customer_id,
-          customer_type,
-          amc_type,
-          duration_months: duration_months || 12,
-          start_date: start,
-          end_date: end,
-          fees,
-          products_covered,
-          status: "active",
+          user_id,
+          company_name,
+          site_address,
+          num_laptops,
+          num_computers,
+          num_printers,
+          num_scanners,
+          computer_configs,
+          on_network,
+          os_type,
+          payment_cycle,
+          rate_per_pc,
+          payment_method,
+          status,
+          amc_type, // only if column exists
         },
       ])
-      .select(
-        `*, customers(name, mobile)`
-      )
+      .select("*")
       .single();
 
     if (error) throw error;
@@ -47,6 +57,7 @@ export const createAMC = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 /* GET ALL AMCs */
 export const getAllAMCs = async (req, res) => {
@@ -63,24 +74,48 @@ export const getAllAMCs = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 /* UPDATE AMC */
 export const updateAMC = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { fees, products_covered, status } = req.body;
+    const {
+      company_name,
+      site_address,
+      num_laptops,
+      num_computers,
+      num_printers,
+      num_scanners,
+      computer_configs,
+      on_network,
+      os_type,
+      payment_cycle,
+      rate_per_pc,
+      payment_method,
+      status,
+      amc_type, // agar column hai
+    } = req.body;
 
     const { data, error } = await supabase
       .from("amcs")
       .update({
-        fees,
-        products_covered,
+        company_name,
+        site_address,
+        num_laptops,
+        num_computers,
+        num_printers,
+        num_scanners,
+        computer_configs,
+        on_network,
+        os_type,
+        payment_cycle,
+        rate_per_pc,
+        payment_method,
         status,
-        updated_at: new Date(),
+        amc_type,
       })
       .eq("id", id)
-      .select()
+      .select("*")
       .single();
 
     if (error) throw error;
@@ -90,6 +125,7 @@ export const updateAMC = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 /* DELETE AMC */
 export const deleteAMC = async (req, res) => {

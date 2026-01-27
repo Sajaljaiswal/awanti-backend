@@ -12,13 +12,13 @@ import {
 
 const router = express.Router();
 
-/* ADMIN ONLY */
+/* ADMIN ONLY */   
 router.post("/", authMiddleware, requireRole(["admin"]), createTicket);
 router.delete("/:id", authMiddleware, requireRole(["admin"]), deleteTicket);
 router.put("/:id", authMiddleware, requireRole(["admin"]), updateTicket);
 
 /* ADMIN + STAFF */
-router.get("/", authMiddleware, getAllTickets);
+router.get("/", authMiddleware, getAllTickets); 
 router.patch("/:id/status", authMiddleware, updateTicketStatus);
 router.put("/:id/assign", authMiddleware, requireRole(["admin"]), assignTicket);
 
