@@ -1,106 +1,107 @@
 import { supabase } from "../src/supabase.js";
 
-/* CREATE AMC */
-export const createAMC = async (req, res) => {
+/* 1. CREATE DETAILED AMC (With Configs) */
+export const createDetailedAMC = async (req, res) => {
   try {
-    const {
-      customer_id,
-      customer_type,
-      amc_type,
-      duration_months,
-      fees,
-      products_covered,
-    } = req.body;
+    const { computer_configs, ...amcData } = req.body;
 
-    if (!customer_id || !fees) {
-      return res.status(400).json({ message: "Customer & fees required" });
-    }
-
-    const start = new Date();
-    const end = new Date();
-    end.setMonth(end.getMonth() + (duration_months || 12));
-
-    const { data, error } = await supabase
+    // Insert the main record
+    const { data: newAMC, error: amcError } = await supabase
       .from("amcs")
-      .insert([
-        {
-          customer_id,
-          customer_type,
-          amc_type,
-          duration_months: duration_months || 12,
-          start_date: start,
-          end_date: end,
-          fees,
-          products_covered,
-          status: "active",
-        },
-      ])
-      .select(
-        `*, customers(name, mobile)`
-      )
+      .insert([{ ...amcData, status: "active" }])
+      .select()
       .single();
 
-    if (error) throw error;
+    if (amcError) throw amcError;
 
-    res.status(201).json(data);
+    // Insert configurations if they exist
+    if (computer_configs && computer_configs.length > 0) {
+      const configsToInsert = computer_configs.map(conf => ({
+        amc_id: newAMC.id,
+        user_name: conf.user,
+        config_details: conf.config
+      }));
+
+      const { error: configError } = await supabase
+        .from("computer_configs")
+        .insert(configsToInsert);
+
+      if (configError) throw configError;
+    }
+
+    res.status(201).json({ data: newAMC });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-/* GET ALL AMCs */
+/* 2. GET ALL DETAILED AMCs */
 export const getAllAMCs = async (req, res) => {
   try {
+    // Fetches AMC and joins the computer_configs array automatically
     const { data, error } = await supabase
       .from("amcs")
-      .select(`*, customers(name, mobile)`)
+      .select(`*, computer_configs(*)`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    res.json(data);
+    res.json({ data });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-/* UPDATE AMC */
-export const updateAMC = async (req, res) => {
+/* 3. UPDATE DETAILED AMC */
+export const updateDetailedAMC = async (req, res) => {
   try {
     const { id } = req.params;
+    const { computer_configs, ...updateData } = req.body;
 
-    const { fees, products_covered, status } = req.body;
-
-    const { data, error } = await supabase
+    // Update main AMC details
+    const { data: updatedAMC, error: amcError } = await supabase
       .from("amcs")
-      .update({
-        fees,
-        products_covered,
-        status,
-        updated_at: new Date(),
-      })
+      .update({ ...updateData, updated_at: new Date() })
       .eq("id", id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (amcError) throw amcError;
 
-    res.json(data);
+    // If configs are provided, we replace the old ones (Sync strategy)
+    if (computer_configs) {
+      // Delete old configs
+      await supabase.from("computer_configs").delete().eq("amc_id", id);
+      
+      // Insert new configs
+      const configsToInsert = computer_configs.map(conf => ({
+        amc_id: id,
+        user_name: conf.user,
+        config_details: conf.config
+      }));
+      await supabase.from("computer_configs").insert(configsToInsert);
+    }
+
+    res.json({ data: updatedAMC });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-/* DELETE AMC */
+/* 4. DELETE AMC */
 export const deleteAMC = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { error } = await supabase.from("amcs").delete().eq("id", id);
+    // If you set up ON DELETE CASCADE in SQL, computer_configs will delete automatically
+    const { error } = await supabase
+      .from("amcs")
+      .delete()
+      .eq("id", id);
 
     if (error) throw error;
 
-    res.json({ message: "AMC deleted" });
+    res.json({ message: "AMC and related configurations deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
