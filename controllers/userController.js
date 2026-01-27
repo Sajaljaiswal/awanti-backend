@@ -94,3 +94,22 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
+/* GET ALL USERS (name, email, mobile) */
+
+export const getUsersBasicInfo = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("name, email, mobile")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

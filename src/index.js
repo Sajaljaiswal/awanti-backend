@@ -9,6 +9,7 @@ import requestRoutes from "../routes/request.js";
 import userRoutes from "../routes/user.js";
 import amcRoutes from "../routes/amc.js";
 
+
 const app = express();
 
 app.use(cors());
