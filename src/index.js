@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use("/users", userRoutes);
 
-app.use("/amc", amcRoutes);
+app.use("/api/amcs", amcRoutes);
 
 app.use("/staff", staffRoutes);
 app.use("/products", productRoutes);
