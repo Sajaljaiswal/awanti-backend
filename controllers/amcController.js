@@ -1,15 +1,53 @@
 import { supabase } from "../src/supabase.js";
-
-/* 1. CREATE DETAILED AMC (With Configs) */
-export const createDetailedAMC = async (req, res) => {
+export const createAMC = async (req, res) => {
   try {
-    const { computer_configs, ...amcData } = req.body;
+    const {
+      user_id,
+      company_name,
+      site_address,
+      num_laptops,
+      num_computers,
+      num_printers,
+      num_scanners,
+      computer_configs,
+      on_network,
+      os_type,
+      payment_cycle,
+      rate_per_pc,
+      payment_method,
+      status,
+      amc_type, // optional (agar add kiya hai)
+    } = req.body;
 
-    // Insert the main record
-    const { data: newAMC, error: amcError } = await supabase
+    // Required fields
+    if (!user_id || !rate_per_pc) {
+      return res
+        .status(400)
+        .json({ message: "user_id & rate_per_pc required" });
+    }
+
+    const { data, error } = await supabase
       .from("amcs")
-      .insert([{ ...amcData, status: "active" }])
-      .select()
+      .insert([
+        {
+          user_id,
+          company_name,
+          site_address,
+          num_laptops,
+          num_computers,
+          num_printers,
+          num_scanners,
+          computer_configs,
+          on_network,
+          os_type,
+          payment_cycle,
+          rate_per_pc,
+          payment_method,
+          status,
+          amc_type, // only if column exists
+        },
+      ])
+      .select("*")
       .single();
 
     if (amcError) throw amcError;
@@ -35,7 +73,8 @@ export const createDetailedAMC = async (req, res) => {
   }
 };
 
-/* 2. GET ALL DETAILED AMCs */
+
+/* GET ALL AMCs */
 export const getAllAMCs = async (req, res) => {
   try {
     // Fetches AMC and joins the computer_configs array automatically
@@ -51,19 +90,49 @@ export const getAllAMCs = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-/* 3. UPDATE DETAILED AMC */
-export const updateDetailedAMC = async (req, res) => {
+/* UPDATE AMC */
+export const updateAMC = async (req, res) => {
   try {
     const { id } = req.params;
     const { computer_configs, ...updateData } = req.body;
 
-    // Update main AMC details
-    const { data: updatedAMC, error: amcError } = await supabase
+    const {
+      company_name,
+      site_address,
+      num_laptops,
+      num_computers,
+      num_printers,
+      num_scanners,
+      computer_configs,
+      on_network,
+      os_type,
+      payment_cycle,
+      rate_per_pc,
+      payment_method,
+      status,
+      amc_type, // agar column hai
+    } = req.body;
+
+    const { data, error } = await supabase
       .from("amcs")
-      .update({ ...updateData, updated_at: new Date() })
+      .update({
+        company_name,
+        site_address,
+        num_laptops,
+        num_computers,
+        num_printers,
+        num_scanners,
+        computer_configs,
+        on_network,
+        os_type,
+        payment_cycle,
+        rate_per_pc,
+        payment_method,
+        status,
+        amc_type,
+      })
       .eq("id", id)
-      .select()
+      .select("*")
       .single();
 
     if (amcError) throw amcError;
@@ -88,7 +157,8 @@ export const updateDetailedAMC = async (req, res) => {
   }
 };
 
-/* 4. DELETE AMC */
+
+/* DELETE AMC */
 export const deleteAMC = async (req, res) => {
   try {
     const { id } = req.params;
