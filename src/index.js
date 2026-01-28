@@ -7,8 +7,7 @@ import staffRoutes from "../routes/staff.js";
 import ticketRoutes from "../routes/tickets.js";
 import requestRoutes from "../routes/request.js";
 import userRoutes from "../routes/user.js";
-import amcRoutes from "../routes/amc.js";
-
+import contractRoutes from "../routes/contract.js";
 const app = express();
 
 app.use(cors());
@@ -16,8 +15,7 @@ app.use(express.json());
 
 app.use("/users", userRoutes);
 
-app.use("/api/amcs", amcRoutes);
-
+app.use("/api/contracts", contractRoutes);
 app.use("/staff", staffRoutes);
 app.use("/products", productRoutes);
 app.use("/tickets", ticketRoutes);
