@@ -7,6 +7,9 @@ import staffRoutes from "../routes/staff.js";
 import ticketRoutes from "../routes/tickets.js";
 import requestRoutes from "../routes/request.js";
 import userRoutes from "../routes/user.js";
+import amcRoutes from "../routes/amc.js";
+
+
 import contractRoutes from "../routes/contract.js";
 const app = express();
 
