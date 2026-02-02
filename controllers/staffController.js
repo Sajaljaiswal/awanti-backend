@@ -11,49 +11,73 @@ export const getStaff = async (req, res) => {
   res.json(data);
 };
 
+
+
+
+
 /* CREATE STAFF (Admin only) */
 export const createStaff = async (req, res) => {
-  const { name, email, mobile, role } = req.body;
+  try {
+    const { name, email, mobile, role, password } = req.body;
 
-  if (!name || !email || !mobile) {
-    return res.status(400).json({
-      message: "Name, email and mobile are required",
-    });
-  }
+    // 1. Basic Validation
+    if (!name || !email || !mobile || !password) {
+      return res.status(400).json({ message: "All fields (name, email, mobile, password) are required" });
+    }
 
-  // create auth user
-  const { data: authUser, error: authError } =
-    await supabase.auth.admin.createUser({
+    // 2. Admin Check (Checking if the requester is an admin)
+    const { data: adminProfile, error: adminError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", req.user.id) // req.user.id auth middleware se aana chahiye
+      .single();
+
+    if (adminError || adminProfile?.role !== "admin") {
+      return res.status(403).json({ message: "Access denied. Only admins can create staff." });
+    }
+
+    // 3. Create User in Supabase Auth
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
+      user_metadata: { name, role: role?.toLowerCase() || "staff" }
     });
 
-  if (authError) {
-    return res.status(400).json({ message: authError.message });
+    if (authError) return res.status(400).json({ message: authError.message });
+
+    // 4. Create Profile in Public Table
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .insert([
+        {
+          id: authUser.user.id,
+          name,
+          email,
+          mobile,
+          role: role?.toLowerCase() || "staff",
+          status: "active",
+        },
+      ])
+      .select()
+      .single();
+
+    if (profileError) {
+      // Cleanup: Agar profile fail ho jaye toh auth user delete karna chahiye (optional logic)
+      return res.status(500).json({ message: profileError.message });
+    }
+
+    res.status(201).json({
+      message: "Staff created successfully",
+      staff: profileData,
+    });
+
+  } catch (err) {
+    console.error("Create Staff Error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-
-  // create profile
-  const { data, error } = await supabase
-    .from("profiles")
-    .insert([
-      {
-        id: authUser.user.id,
-        name,
-        email,
-        mobile,
-        role: role ,
-        status: "active",
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    return res.status(500).json({ message: error.message });
-  }
-
-  res.status(201).json(data);
 };
+
 
 /* UPDATE STAFF */
 export const updateStaff = async (req, res) => {
