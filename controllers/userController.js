@@ -3,7 +3,7 @@ import { supabase } from "../src/supabase.js";
 /* CREATE USER */
 export const createUser = async (req, res) => {
   try {
-    const { name, mobile, email, address, amc_details } = req.body;
+    const { name, mobile, email, address, amc_details} = req.body;
 
     if (!name || !mobile) {
       return res.status(400).json({ message: "Name and mobile are required" });

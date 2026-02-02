@@ -6,7 +6,7 @@ import requireRole from "../middlewares/requireRole.js";
 const router = express.Router();
 
 // route for creating request
-router.post("/create", authMiddleware, createRequest);
+router.post("/create",  createRequest);
 
 
 // route for admin to get all requests from user

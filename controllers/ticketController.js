@@ -14,7 +14,7 @@ export const createTicket = async (req, res) => {
         product_type,
         issue,
         ticket_number: `TCK-${Date.now()}`,
-        created_by: req.user.id,
+        created_by: "38e6ead6-4ab4-42a6-a11b-cdffaf4da863"||req.user.id,
       },
     ])
     .select()
