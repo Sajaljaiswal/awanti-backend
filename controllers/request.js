@@ -86,7 +86,6 @@ export const getAllRequests = async (req, res) => {
       total: data.length,
       data,
     });
-    console.log("Request found");
     
 
   } catch (err) {

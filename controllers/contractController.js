@@ -8,10 +8,14 @@ export const createContract = async (req, res) => {
     email, 
     address, 
     no_of_laptop, 
+    no_of_computer, // New Field
+    no_of_printer,  // New Field
+    no_of_scanner,  // New Field
     starting_date, 
     end_date, 
     price, 
-    signature 
+    signature,
+    equipment // New Field: Itemized array from UI
   } = req.body;
 
   try {
@@ -24,10 +28,14 @@ export const createContract = async (req, res) => {
           email,
           address,
           no_of_laptop,
+          no_of_computer, // Added to insert
+          no_of_printer,  // Added to insert
+          no_of_scanner,  // Added to insert
           starting_date,
           end_date,
           price,
-          signature, // Base64 string or URL
+          signature, 
+          equipment, // Ensure your Supabase column type is 'jsonb'
           contract_number: `CON-${Date.now()}`,
           created_by: req.user.id,
         },
@@ -42,7 +50,6 @@ export const createContract = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 /* GET ALL CONTRACTS */
 export const getAllContracts = async (req, res) => {
   try {
