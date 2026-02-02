@@ -4,11 +4,10 @@ import { supabase } from "../src/supabase.js";
 export const createRequest = async (req, res) => {
   try {
   
-    const userId = req.user.id;
-    const userEmail = req.user.email;
+   
 
     // Form data (from frontend / postman)
-    const { name, phone, issue } = req.body;
+    const { name, phone, issue ,email} = req.body;
 
     // Validation
     if (!name || !phone || !issue) {
@@ -31,11 +30,11 @@ export const createRequest = async (req, res) => {
       .from("requests")
       .insert([
         {
-          user_id: userId,
+         
           name,
           phone,
           issue,
-          email: userEmail,
+          email,
           request_date,
           request_time,
         },

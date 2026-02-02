@@ -5,6 +5,7 @@ import {
   getProducts,
   createProduct,
   deleteProduct,
+  updateProduct,
 } from "../controllers/productController.js";
 
 const router = express.Router();
@@ -15,7 +16,11 @@ router.get("/", authMiddleware, requireRole(["admin"]), getProducts);
 // CREATE product (admin only)
 router.post("/", authMiddleware, requireRole(["admin"]), createProduct);
 
+
 // DELETE product (admin only)
 router.delete("/:id", authMiddleware, requireRole(["admin"]), deleteProduct);
+
+
+router.put("/:id",authMiddleware,requireRole(["admin"]),updateProduct);
 
 export default router;
