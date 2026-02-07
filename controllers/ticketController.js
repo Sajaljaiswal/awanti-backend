@@ -82,36 +82,6 @@ export const assignTicket = async (req, res) => {
   res.json({ message: "Ticket assigned" });
 };
 
-/* UPDATE STATUS + LOG HISTORY */
-export const updateTicketStatus = async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body;
-
-  // get old status
-  const { data: ticket } = await supabase
-    .from("tickets")
-    .select("status")
-    .eq("id", id)
-    .single();
-
-  // update ticket
-  await supabase
-    .from("tickets")
-    .update({ status, updated_at: new Date() })
-    .eq("id", id);
-
-  // insert log
-  await supabase.from("ticket_status_logs").insert([
-    {
-      ticket_id: id,
-      old_status: ticket.status,
-      new_status: status,
-      changed_by: req.user.id,
-    },
-  ]);
-
-  res.json({ message: "Status updated" });
-};
 
 /* DELETE TICKET (ADMIN) */
 export const deleteTicket = async (req, res) => {
@@ -140,3 +110,122 @@ export const getTicketHistory = async (req, res) => {
 };
 
 
+
+
+//ticket updated history
+export const updateTicketStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // 1. Ticket fetch karein aur error handle karein
+    const { data: ticket, error: fetchError } = await supabase
+      .from("tickets")
+      .select("status_history")
+      .eq("id", id)
+      .single();
+
+    // Agar ticket nahi mila toh turant return karein
+    if (fetchError || !ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    
+    const oldHistory = Array.isArray(ticket.status_history) ? ticket.status_history : [];
+console.log(oldHistory);
+
+    
+    const newLog = {
+      status: status,
+      at: new Date().toLocaleString("en-IN", {
+        day: '2-digit', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true
+      }),
+      // Middleware se data nikalne ka sabse safe tarika
+      by: req.user?.name ||req.user?.email|| "Unknown Staff",
+      role: req.user?.role || "Staff"
+    };
+
+    
+    const { data, error: updateError } = await supabase
+      .from("tickets")
+      .update({
+        status: status,
+        status_history: [...oldHistory, newLog] // Appending history
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // Success response
+    res.status(200).json(data);
+
+  } catch (err) {
+    console.error("CRASH ERROR:", err.message);
+    res.status(500).json({ message: "Server error: " + err.message });
+  }
+};
+
+
+// ticket details 
+export const getTicketDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*") // Saare columns (issue, history, customer details, everything)
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// All status of every ticket
+export const getLatestStatus = async (req, res) => {
+  try {
+    // 1. Saare tickets fetch karein jinki history empty nahi hai
+    const { data: tickets, error } = await supabase
+      .from("tickets")
+      .select("ticket_number, customer_name, status_history")
+      .not("status_history", "is", null);
+
+    if (error) throw error;
+
+    // 2. Saare tickets ki history ko ek single array mein merge karein
+    let allActivities = [];
+    tickets.forEach(ticket => {
+      if (Array.isArray(ticket.status_history)) {
+        ticket.status_history.forEach(log => {
+          allActivities.push({
+            ticket_number: ticket.ticket_number,
+            customer_name: ticket.customer_name,
+            ...log // Isme status, at, aur by pehle se hai
+          });
+        });
+      }
+    });
+
+    // 3. Latest activity ko sabse upar dikhane ke liye sort karein
+    // Note: Iske liye hum 'at' string ko date mein parse karenge
+    allActivities.sort((a, b) => new Date(b.at) - new Date(a.at));
+
+    // Sirf top 10 activities bhejein
+    res.status(200).json(allActivities.slice(0, 10));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
